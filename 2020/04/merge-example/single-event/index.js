@@ -1186,6 +1186,8 @@
 
         // set up initial transformation
         this.initTransform(center_world, viewport_size, denominator);
+
+        //this.current_step = Number.MAX_SAFE_INTEGER
     };
 
     // fixme: rename -> initTransform
@@ -1256,18 +1258,26 @@
     };
 
     Transform.prototype.zoom = function zoom (ssctree, zoom_factor, x, y) {
+        //console.log(' ')
+        var if_snap = true;
         //console.log('transform.js St before:', this.getScaleDenominator())
         //console.log('transform.js factor:', zoom_factor)
 
         var St_current = this.getScaleDenominator();
+        var current_step = ssctree.get_step_from_St(St_current); //current_step should be compute instantly because of aborting actions
         this.compute_zoom_parameters(zoom_factor, x, y);
         var St = this.getScaleDenominator();
-
+            
         //console.log('transform.js ----------------:')
         //console.log('transform.js St after:', this.getScaleDenominator())
 
-        var snapped_step = ssctree.get_step_from_St(St, true, St_current);
+
+
+        var snapped_step = ssctree.get_step_from_St(St, if_snap, zoom_factor, current_step);
+        var time_factor = ssctree.get_time_factor(St, if_snap, zoom_factor, current_step);
+
         var snapped_St = ssctree.get_St_from_step(snapped_step);
+        //this.current_step = snapped_step
 
         //console.log('transform.js snapped_step:', snapped_step)
         //console.log('transform.js snapped_St:', snapped_St)
@@ -1276,7 +1286,7 @@
         //let final_St = this.getScaleDenominator()
         //console.log('transform.js final St:', final_St) 
         //console.log('transform.js final step:', ssctree.get_step_from_St(St, false))
-            
+        return time_factor
     };
 
     Transform.prototype.compute_zoom_parameters = function compute_zoom_parameters (zoom_factor, x, y) {
@@ -2038,9 +2048,10 @@
             })
     };
 
-    SSCTree.prototype.get_step_from_St = function get_step_from_St (St, if_snap, St_current) {
+    SSCTree.prototype.get_step_from_St = function get_step_from_St (St, if_snap, zoom_factor, current_step) {
             if ( if_snap === void 0 ) if_snap = false;
-            if ( St_current === void 0 ) St_current = -1;
+            if ( zoom_factor === void 0 ) zoom_factor = 1;
+            if ( current_step === void 0 ) current_step = Number.MAX_SAFE_INTEGER;
 
             
         // FIXME: these 2 variables should be adjusted
@@ -2063,38 +2074,157 @@
         // reduction in percentage
         var reductionf = 1 - Math.pow(this.tree.metadata.start_scale_Sb / St, 2);
         var step = this.tree.metadata.no_of_objects_Nb * reductionf; //step is not necessarily an integer
+        var snapped_step = step;
         var step_highs = this.step_highs;
         if (if_snap == true
             && step_highs != null
-            && step > step_highs[0]
-            && step < step_highs[step_highs.length - 1] //without this line, the map will stop zooming out when at the last step
+            && step > step_highs[0] - 0.001
+            && step < step_highs[step_highs.length - 1] + 0.001 //without this line, the map will stop zooming out when at the last step
         ) {
             //console.log('tiles.js step_highs:', step_highs)
             //console.log('tiles.js step:', step)
-            var step_index = snap_to_existing_stephigh(step, step_highs);
                 
+
+            var current_step_index = snap_to_existing_stephigh(current_step, step_highs);
+            if (Math.abs(current_step - step_highs[current_step_index]) < 0.001) {
+                current_step = step_highs[current_step_index];
+            }
+
+
             //if we scroll too little, the map doesn't zoom because of the snapping.
             //we force snapping for at least one step. 
+            //let snapped_St = this.get_St_from_step(step_highs[step_index])
+            //console.log('tiles.js normal_step_diff:', normal_step_diff)
+            //console.log('tiles.js current_step:', current_step)
+            //console.log('tiles.js step_highs[step_index]:', step_highs[step_index])
+            var snapped_index = snap_to_existing_stephigh(step, step_highs);
+            snapped_step = step_highs[snapped_index];
 
-            var snapped_St = this.get_St_from_step(step_highs[step_index]);
-            //console.log('tiles.js snapped_St:', snapped_St)
-            //console.log('tiles.js St_current:', St_current)
-            if (Math.abs(snapped_St - St_current) < 0.1 ) {
-                if (St < St_current) { //zooming in 
-                    step_index -= 1;
+
+
+            if (current_step != Number.MAX_SAFE_INTEGER) {
+                if (//current_step < step //zoom out
+                    zoom_factor < 1
+                    && snapped_step <= current_step) { //wrong direction because of snapping
+                    snapped_index += 1;
                 }
-                else if (St > St_current) { //zooming out
-                    step_index += 1;
+                else if (//current_step > step //zoom in
+                    zoom_factor > 1
+                    && snapped_step >= current_step) { //wrong direction because of snapping
+                    snapped_index -= 1;
                 }
             }
-            step = step_highs[step_index];
+
+
+
+
+            //if (current_step == step_highs[snapped_index] && current_step != Number.MAX_SAFE_INTEGER) {
+            //if (zoom_factor>1) { //zooming in 
+            //    snapped_index -= 1
+            //}
+            //else if (zoom_factor < 1) { //zooming out
+            //    snapped_index += 1
+            //}
+            //}
+            snapped_step = step_highs[snapped_index];
+
             //console.log('tiles.js new step:', step)
 
             //console.log('tiles.js snapped_step:', step)
         }
             
         //return Math.max(0, step)
-        return step
+        return snapped_step
+    };
+
+    SSCTree.prototype.get_time_factor = function get_time_factor (St, if_snap, zoom_factor, current_step) {
+            if ( if_snap === void 0 ) if_snap = false;
+            if ( zoom_factor === void 0 ) zoom_factor = 1;
+            if ( current_step === void 0 ) current_step = Number.MAX_SAFE_INTEGER;
+
+
+        if (this.tree === null || if_snap == false) {
+            return 1
+        }
+
+        // reduction in percentage
+        var reductionf = 1 - Math.pow(this.tree.metadata.start_scale_Sb / St, 2);
+        var step = this.tree.metadata.no_of_objects_Nb * reductionf; //step is not necessarily an integer
+        var snapped_step = step;
+        var step_highs = this.step_highs;
+        var time_factor = 1;
+        if (if_snap == true
+            && step_highs != null
+            && step > step_highs[0] - 0.001
+            && step < step_highs[step_highs.length - 1] + 0.001 //without this line, the map will stop zooming out when at the last step
+        ) {
+            //console.log('tiles.js --------------------------------------')
+            //console.log('tiles.js step_highs:', step_highs)
+            //console.log('tiles.js current_step:', current_step)
+            var current_step_index = snap_to_existing_stephigh(current_step, step_highs);
+            if (Math.abs(current_step - step_highs[current_step_index]) < 0.001) {
+                current_step = step_highs[current_step_index];
+            }
+
+
+
+            //console.log('tiles.js current_step_index:', current_step_index)
+
+            //console.log('tiles.js step:', step)
+            //console.log('tiles.js step_highs[current_step_index]:', step_highs[current_step_index])
+            var normal_step_diff = Math.abs(step - current_step);
+
+            var snapped_index = snap_to_existing_stephigh(step, step_highs);
+
+
+            //if we scroll too little, the map doesn't zoom because of the snapping.
+            //we force snapping for at least one step. 
+
+            //let snapped_St = this.get_St_from_step(step_highs[step_index])
+            //console.log('tiles.js normal_step_diff:', normal_step_diff)
+            //console.log('tiles.js snapped_index:', snapped_index)
+            //console.log('tiles.js step_highs[snapped_index]:', step_highs[snapped_index])
+            //console.log('tiles.js zoom_factor:', zoom_factor)
+            //if (current_step == step_highs[snapped_index] && current_step != Number.MAX_SAFE_INTEGER) {
+            //if (zoom_factor > 1) { //zooming in 
+            //    snapped_index -= 1
+            //}
+            //else if (zoom_factor < 1) { //zooming out
+            //    snapped_index += 1
+            //}
+            //}
+
+            snapped_step = step_highs[snapped_index];
+            if (current_step != Number.MAX_SAFE_INTEGER) {
+                if (//current_step < step //zoom out
+                    zoom_factor < 1
+                    && snapped_step <= current_step) { //wrong direction or no zooming because of snapping
+                    snapped_index += 1;
+                }
+                else if (//current_step > step //zoom in
+                    zoom_factor > 1
+                    && snapped_step >= current_step) { //wrong direction because of snapping
+                    snapped_index -= 1;
+                }
+            }
+            snapped_step = step_highs[snapped_index];
+            //console.log('tiles.js snapped_step:', snapped_step)
+
+            var adjusted_step_diff = Math.abs(snapped_step - current_step);
+
+            if (current_step != Number.MAX_SAFE_INTEGER) {
+                time_factor = adjusted_step_diff / normal_step_diff;
+            }
+
+            //console.log('tiles.js adjusted_step_diff:', adjusted_step_diff)
+            //console.log('tiles.js normal_step_diff:', normal_step_diff)
+            //console.log('tiles.js time_factor:', time_factor)
+
+            //console.log('tiles.js snapped_step:', step)
+        }
+
+        //return Math.max(0, step)
+        return time_factor
     };
 
     SSCTree.prototype.get_St_from_step = function get_St_from_step (step) {
@@ -2107,8 +2237,8 @@
 
 
     function snap_to_existing_stephigh(step, step_highs) {
-        var start = 0, end = step_highs.length - 1;
 
+        var start = 0, end = step_highs.length - 1;
         // Iterate while start not meets end 
         while (start <= end) {
 
@@ -2116,7 +2246,7 @@
             var mid = Math.floor((start + end) / 2);
 
             // If element is present at mid, return True 
-            if (step_highs[mid] == step) { return step; }
+            if (step_highs[mid] == step) { return mid; }
 
             // Else look in left or right half accordingly 
             else if (step_highs[mid] < step)
@@ -2129,10 +2259,10 @@
         //console.log('step_highs[start], step, step_highs[end]:', step_highs[start], step, step_highs[end])
         //console.log('step_highs[start] - step, step - step_highs[end]:', step_highs[start] - step, step - step_highs[end])
         if (step_highs[start] - step <= step - step_highs[end]) { //start is already larger than end by 1
-            return start
+            return Math.min(start, step_highs.length - 1) //start will be larger than the last value of step_highs[0] if step is larger than all the values of step_highs    
         }
         else {
-            return end
+            return Math.max(end, 0) //end will be negtive if step is smaller than step_highs[0]
         }
     }
 
@@ -2729,9 +2859,9 @@
         this._interaction_settings = {
             zoom_factor: 1,
             zoom_duration: 1000,
+            time_factor: 1, //we prolong the time because we merge parallelly
             pan_duration: 1000
         };
-
 
         this.msgbus = new MessageBusConnector();
 
@@ -2830,7 +2960,9 @@
         return this._transform;
     };
 
-    Map.prototype.render = function render () {
+    Map.prototype.render = function render (k) {
+            if ( k === void 0 ) k = 0;
+
         var St = this.getTransform().getScaleDenominator();
         this.msgbus.publish('map.scale', [this.getTransform().getCenter(), St]);
 
@@ -2840,13 +2972,27 @@
         }
         //We minus by 0.01 in order to compensate with (possibly) the round-off error
         //so that the boundaries can be displayed correctly.
-        var step = this.ssctree.get_step_from_St(St) - 0.00001;
+
+        //var step = this.getTransform().current_step
+        //if (step == Number.MAX_SAFE_INTEGER) {
+        //var step = this.ssctree.get_step_from_St(St)
+        //}
+        var step = this.ssctree.get_step_from_St(St); //+ 0.001
+        if (k ==1) { //in this case, we are at the end of a zooming operation, we test if we want to snap
+            var snapped_step = this.ssctree.get_step_from_St(St, true, this._interaction_settings.zoom_factor);
+            if (Math.abs(step - snapped_step) < 0.001) {
+                step = snapped_step;
+            }
+        }
+            
+        //var step = this.ssctree.get_step_from_St(St) //- 0.001
+        //console.log('map.js, step:', step)
 
         if (step < 0) {
             step = 0;
         }
-        else if (step > last_step) {
-            step = last_step + 0.01; // +0.01: in order to display the exterior boundary correctly
+        else if (step >= last_step) {
+            step = last_step;
         }
 
         //console.log('map.js, step:', step)
@@ -2880,7 +3026,7 @@
             // update the world_square matrix
             this$1.getTransform().world_square = m;
             this$1.getTransform().updateViewportTransform();
-            this$1.render();
+            this$1.render(k);
             if (k == 1) {
                 this$1._abort = null;
             }
@@ -2900,7 +3046,7 @@
             // update the world_square matrix
             this.getTransform().world_square = m;
             this.getTransform().updateViewportTransform();
-            this.render();
+            this.render(k);
             if (k == 1) {
                 this._abort = null;
             }
@@ -2922,7 +3068,7 @@
             // update the world_square matrix
             this$1.getTransform().world_square = m;
             this$1.getTransform().updateViewportTransform();
-            this$1.render();
+            this$1.render(k);
             if (k === 1) {
                 this$1._abort = null;
             }
@@ -2943,7 +3089,7 @@
             // update the world_square matrix
             this.getTransform().world_square = m;
             this.getTransform().updateViewportTransform();
-            this.render();
+            this.render(k);
             if (k == 1) {
                 this._abort = null;
             }
@@ -2953,7 +3099,8 @@
 
     Map.prototype.animateZoom = function animateZoom (x, y, zoom_factor) {
         var start = this.getTransform().world_square;
-        this.getTransform().zoom(this.ssctree, zoom_factor, x, this.getCanvasContainer().getBoundingClientRect().height - y);
+        this._interaction_settings.time_factor = this.getTransform().zoom(
+            this.ssctree, zoom_factor, x, this.getCanvasContainer().getBoundingClientRect().height - y);
         var end = this.getTransform().world_square;
         var interpolate = this.doEaseOutSine(start, end);
         return interpolate;
@@ -2986,7 +3133,8 @@
     };
 
     Map.prototype.zoom = function zoom (x, y, factor) {
-        this.getTransform().zoom(this.ssctree, factor, x, this.getCanvasContainer().getBoundingClientRect().height - y);
+        this._interaction_settings.time_factor = this.getTransform().zoom(
+            this.ssctree, factor, x, this.getCanvasContainer().getBoundingClientRect().height - y);
         this.render();
     };
 
@@ -3014,8 +3162,15 @@
             this._abort();
         }
         var interpolator = this.animateZoom(x, y, zoom_factor);
+        this._interaction_settings.zoom_factor = zoom_factor;
+        //this.zoom_factor = zoom_factor
         // FIXME: settings
-        this._abort = timed(interpolator, this._interaction_settings.zoom_duration, this);
+
+        var zoom_duration = this._interaction_settings.zoom_duration * this._interaction_settings.time_factor;
+        //console.log('map.js this._interaction_settings.zoom_duration:', this._interaction_settings.zoom_duration)
+        //console.log('map.js this._interaction_settings.time_factor:', this._interaction_settings.time_factor)
+        //console.log('map.js zoom_duration:', zoom_duration)
+        this._abort = timed(interpolator, zoom_duration, this);
     };
 
     Map.prototype.panAnimated = function panAnimated (dx, dy) {
