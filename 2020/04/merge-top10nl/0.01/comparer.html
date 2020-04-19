@@ -407,8 +407,11 @@
             // (e.g. at center, instead of completely at left)
             let x = e.clientX;
             if (x < 0) x = 0;
-            // fixme: hardcoded width
-            if (x > 1024) x = 1024;
+
+            let hGap = 0;
+            let newWidth = window.innerWidth - hGap;
+            if (x > newWidth) x = newWidth;
+			
             return x;
         }
         function onMove(e) {
