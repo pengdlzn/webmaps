@@ -118,7 +118,7 @@
         <!--        </div>-->
         <!--    </div>-->
 
-        <span class="w3-bar-item" id="demo_info">Vario-scale demo: Dataset_nm, Algorithm, Parameter</span>
+        <span class="w3-bar-item" id="demo_info"></span>
         <span class="w3-bar-item" id="scale-denominator">1: scale</span>
 
         <div class="w3-dropdown-click w3-right">
@@ -355,8 +355,8 @@
                 'interaction_defaults': []
             }
 
-            document.getElementById("demo_info").textContent =
-                "Vario-scale demo: " + map_settings.initialization.navigationBar_title
+            document.getElementById("demo_info").textContent = //"Vario-scale demo: " + 
+                map_settings.initialization.navigationBar_title
 
             // Make a new map instance
             var map = new varioscale.Map(map_settings);
