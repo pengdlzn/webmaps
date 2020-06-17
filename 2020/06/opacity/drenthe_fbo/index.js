@@ -1270,34 +1270,40 @@
         var St_current = this.getScaleDenominator();
         var current_step = ssctree.get_step_from_St(St_current); //current_step should be compute instantly because of aborting actions
         this.compute_zoom_parameters(zoom_factor, x, y);
-        var St = this.getScaleDenominator();
+        var time_factor = 1;
 
 
-        //console.log('transform.js St_current:', St_current)
-        //console.log('transform.js St:', St)
-        //console.log('transform.js St_current / St:', St_current / St)
-        //console.log('transform.js zoom_factor:', zoom_factor)
+        if (if_snap == true) {
 
-        //console.log('transform.js ----------------:')
-        //console.log('transform.js St after:', this.getScaleDenominator())
+            var St_new = this.getScaleDenominator();
 
 
+            //console.log('transform.js St_current:', St_current)
+            //console.log('transform.js St:', St)
+            //console.log('transform.js St_current / St:', St_current / St)
+            //console.log('transform.js zoom_factor:', zoom_factor)
 
-        var snapped_step = ssctree.get_step_from_St(St, if_snap, zoom_factor, current_step);
-        var time_factor = ssctree.get_time_factor(St, if_snap, zoom_factor, current_step);
-        var snapped_St = ssctree.get_St_from_step(snapped_step);
-        this.snapped_step = snapped_step;
-        this.snapped_St = snapped_St;
+            //console.log('transform.js ----------------:')
+            //console.log('transform.js St after:', this.getScaleDenominator())
 
-        //this.current_step = snapped_step
 
-        //console.log('transform.js snapped_step:', snapped_step)
-        //console.log('transform.js snapped_St:', snapped_St)
-        //console.log('transform.js St / snapped_St:', St / snapped_St)
-        this.compute_zoom_parameters(St / snapped_St, x, y);
-        //let final_St = this.getScaleDenominator()
-        //console.log('transform.js final St:', final_St) 
-        //console.log('transform.js final step:', ssctree.get_step_from_St(St, false))
+            var snapped_step = ssctree.get_snappedstep_from_newSt(St_new, zoom_factor, current_step);
+            time_factor = ssctree.get_time_factor(St_new, zoom_factor, current_step);
+            var snapped_St = ssctree.get_St_from_step(snapped_step);
+            this.snapped_step = snapped_step;
+            this.snapped_St = snapped_St;
+
+            //this.current_step = snapped_step
+
+            //console.log('transform.js snapped_step:', snapped_step)
+            //console.log('transform.js snapped_St:', snapped_St)
+            //console.log('transform.js St / snapped_St:', St / snapped_St)
+            this.compute_zoom_parameters(St_new / snapped_St, x, y);
+            //let final_St = this.getScaleDenominator()
+            //console.log('transform.js final St:', final_St)
+            //console.log('transform.js final step:', ssctree.get_step_from_St(St, false))
+
+        }
         return time_factor
     };
 
@@ -1564,19 +1570,7 @@
                 //'void main() {\n' +
                 //'  gl_FragColor = texture2D(u_Sampler, v_TexCoord);\n' +
                 //'}\n';
-                'precision highp float;\n' +            
-                'uniform sampler2D uSampler;\n' +
-                'uniform float opacity;\n' +
-                'varying vec2 v_TexCoord;\n' +
-                'void main() {\n' +
-                '  vec4 color = texture2D(uSampler, v_TexCoord);' +
-                '  color.a = opacity;' +
-                '  gl_FragColor = color;\n' +
-                '}\n';
-
-            //uniform float opacity;
-            //vec4 color = texture2D(u_tex, v_texCoord);
-            //color.a = 0.5;
+                "\n            precision highp float;\n          \n            uniform sampler2D uSampler;\n\n            uniform float opacity;\n\n            varying vec2 v_TexCoord;\n\n            void main() {\n\n              vec4 color = texture2D(uSampler, v_TexCoord);\n              if (color.a != 0.0) //when clearing the buffer of fbo, we used value 0.0 for opacity; see render.js\n                { color.a = opacity; } \n              else \n                { discard; } \n              gl_FragColor = color;\n \n            }\n\n            ";
 
             DrawProgram.call(this, gl, vertexShaderText, fragmentShaderText);
         }
@@ -1586,7 +1580,7 @@
         ImageFboDrawProgram.prototype.constructor = ImageFboDrawProgram;
 
         //    draw(matrix, tilecontent)
-        ImageFboDrawProgram.prototype.draw_tile = function draw_tile (fbo, tree_setting) {
+        ImageFboDrawProgram.prototype.draw_fbo = function draw_fbo (fbo, tree_setting) {
             //console.log('drawprograms.js fbo:', fbo)
             if (fbo === null) {
                 console.log('drawprograms.js fbo is null:', fbo);
@@ -1928,7 +1922,7 @@
         };
 
 
-        PolygonDrawProgram.prototype.draw_tile_fbo = function draw_tile_fbo (matrix, tile, tree_setting, width, height) {
+        PolygonDrawProgram.prototype.draw_tile_into_fbo = function draw_tile_into_fbo (matrix, tile, tree_setting, width, height) {
             // guard: if no data in the tile, we will skip rendering
             var triangleVertexPosBufr = tile.content.polygon_triangleVertexPosBufr;
             if (triangleVertexPosBufr === null) {
@@ -1939,7 +1933,7 @@
             var gl = this.gl;
             var shaderProgram = this.shaderProgram;
             gl.useProgram(shaderProgram);
-            gl.bindFramebuffer(gl.FRAMEBUFFER, gl.framebuffer);
+            gl.bindFramebuffer(gl.FRAMEBUFFER, gl.fbo);
             gl.viewport(0, 0, width, height);
             //gl.readPixels(width / 2, height / 2, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, readout);
             //gl.readPixels(0.5, 0.5, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, readout);
@@ -2097,6 +2091,8 @@
         }
         gl.bindRenderbuffer(gl.RENDERBUFFER, depthBuffer); // Bind the object to target
         gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, OFFSCREEN_WIDTH, OFFSCREEN_HEIGHT);
+        framebuffer.depthBuffer = depthBuffer;
+
 
         // Attach the texture and the renderbuffer object to the FBO
         gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
@@ -2115,8 +2111,7 @@
         gl.bindTexture(gl.TEXTURE_2D, null);
         gl.bindRenderbuffer(gl.RENDERBUFFER, null);
 
-
-        return framebuffer;
+        gl.fbo = framebuffer; //fbo: frambuffer object
     }
 
     // FIXME: rename draw to renderFunc ?
@@ -2126,7 +2121,6 @@
 
     var Renderer = function Renderer(gl, canvas, ssctrees) {
         this.gl = gl;
-        this.canvas = canvas;
         this.ssctrees = ssctrees;
         this.settings = {
             boundary_width: 0.2,
@@ -2166,10 +2160,10 @@
         this._clearColor();
         this._clearColorFbo();
         //this.renderer._clearDepth()
-        //console.log('map.js steps.length:', steps.length)
+        //console.log('render.js steps.length:', steps.length)
 
-        //console.log('map.js render this.ssctrees.length:', this.ssctrees.length)
-        //console.log('map.js this.ssctrees[0]:', this.ssctrees[0])
+        //console.log('render.js render this.ssctrees.length:', this.ssctrees.length)
+        //console.log('render.js this.ssctrees[0]:', this.ssctrees[0])
 
         //draw from the last layer to the first layer; first layer will be on top
         for (var i = steps.length - 1; i >= 0; i--) {
@@ -2177,7 +2171,7 @@
             this._clearDepth();
             this._clearDepthFbo();
             var ssctree = this.ssctrees[i];
-            //console.log('map.js render ssctree:', ssctree)
+            //console.log('render.js render ssctree:', ssctree)
             var step = steps[i] - 0.001; //to compensate with the rounding problems
 
             //let last_step = ssctree.tree.metadata.no_of_steps_Ns
@@ -2194,9 +2188,9 @@
                 step = last_step;
             }
             steps[i] = step;
-            //console.log('map.js, step after snapping:', step)
+            //console.log('render.js, step after snapping:', step)
 
-
+            //console.log('render.js, step after snapping:', step)
             var matrix_box3d = ssctree.prepare_active_tiles(step, transform, this.gl);
             this.render_relevant_tiles(ssctree, matrix_box3d[0], matrix_box3d[1], [step, St]);
         }
@@ -2232,24 +2226,16 @@
 
             if (tree_setting.datatype == 'polygon') {
                 var polygon_draw_program = this.programs[0];
-                //let fbo = null
-                //let fbo = initFramebufferObject(gl, canvas.width, canvas.height);
-                ////console.log('render.js canvas.width:', canvas.width)
-                ////console.log('render.js gl.width:', gl.width)
-                ////console.log('render.js canvas.height:', canvas.height)
-                ////console.log('render.js gl.height:', gl.height)
-                //fbo.width = canvas.width
-                //fbo.height = canvas.height
-                //gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+
                 //console.log('')
                 tiles.forEach(function (tile) { // .filter(tile => {tile.}) // FIXME tile should only have polygon data
                     //polygon_draw_program.draw_tile(matrix, tile, tree_setting, canvas.width, canvas.height);
-                    polygon_draw_program.draw_tile_fbo(matrix, tile, tree_setting, canvas.width, canvas.height);
+                    polygon_draw_program.draw_tile_into_fbo(matrix, tile, tree_setting, canvas.width, canvas.height);
                     //console.log('render.js fbo:', fbo)
                 });
 
                 var image_fbo_program = new ImageFboDrawProgram(gl);
-                image_fbo_program.draw_tile(gl.framebuffer, tree_setting);
+                image_fbo_program.draw_fbo(gl.fbo, tree_setting);
 
 
                 // If we want to draw lines twice -> thick line under / small line over
@@ -2300,7 +2286,7 @@
 
     Renderer.prototype._clearDepthFbo = function _clearDepthFbo () {
         var gl = this.gl;
-        gl.bindFramebuffer(gl.FRAMEBUFFER, gl.framebuffer);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, gl.fbo);
         // gl.clearColor(1.0, 1.0, 1.0, 1.0);
         gl.clearDepth(1.0); // Clear everything
         //    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); // clear both color and depth buffer
@@ -2316,8 +2302,8 @@
 
     Renderer.prototype._clearColorFbo = function _clearColorFbo () {
         var gl = this.gl;
-        gl.bindFramebuffer(gl.FRAMEBUFFER, gl.framebuffer);
-        gl.clearColor(1.0, 1.0, 1.0, 0.0);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, gl.fbo);
+        gl.clearColor(1, 1, 1, 0.0);
         //gl.clearColor(0, 0, 0, 1.0);
         //gl.clearColor(0, 0, 0, 0.0);
         gl.clear(gl.COLOR_BUFFER_BIT); // clear both color and depth buffer
@@ -2466,7 +2452,7 @@
                 // buffer for triangles of polygons
                 // itemSize = 6: x, y, z, r_frac, g_frac, b_frac (see parse.js)
                 //console.log('tilecontent.js data[0]:', data[0])
-                gl.bindFramebuffer(gl.FRAMEBUFFER, gl.framebuffer);
+                gl.bindFramebuffer(gl.FRAMEBUFFER, gl.fbo);
                 this$1.polygon_triangleVertexPosBufr = create_data_buffer(gl, new Float32Array(data[0]), 6);
                 gl.bindFramebuffer(gl.FRAMEBUFFER, null);
                 //console.log('tilecontent.js load_ssc_tile, this.polygon_triangleVertexPosBufr:', this.polygon_triangleVertexPosBufr)
@@ -2980,8 +2966,23 @@
         return [matrix, box3d]
     };
 
-    SSCTree.prototype.get_step_from_St = function get_step_from_St (St, if_snap, zoom_factor, current_step) {
-            if ( if_snap === void 0 ) if_snap = false;
+    SSCTree.prototype.get_step_from_St = function get_step_from_St (St) {
+
+        if (this.tree === null) {
+            return 0
+        }
+        //console.log('')
+
+        // reduction in percentage
+        var reductionf = 1 - Math.pow(this.tree.metadata.start_scale_Sb / St, 2);
+        console.log('ssctree.js reductionf:', reductionf);
+        var step = this.tree.metadata.no_of_objects_Nb * reductionf; //step is not necessarily an integer
+        console.log('ssctree.js Nt:', this.tree.metadata.no_of_objects_Nb - step);
+
+        return step
+    };
+
+    SSCTree.prototype.get_snappedstep_from_newSt = function get_snappedstep_from_newSt (St_new,zoom_factor, current_step) {
             if ( zoom_factor === void 0 ) zoom_factor = 1;
             if ( current_step === void 0 ) current_step = Number.MAX_SAFE_INTEGER;
 
@@ -3005,18 +3006,18 @@
         //console.log('')
 
         // reduction in percentage
-        var reductionf = 1 - Math.pow(this.tree.metadata.start_scale_Sb / St, 2);
+        //let reductionf = 1 - Math.pow(this.tree.metadata.start_scale_Sb / St, 2)
         //console.log('ssctree.js reductionf:', reductionf)
-        var step = this.tree.metadata.no_of_objects_Nb * reductionf; //step is not necessarily an integer
-        var snapped_step = step;
+        //let step = this.tree.metadata.no_of_objects_Nb * reductionf //step is not necessarily an integer
+        var newstep = this.get_step_from_St(St_new);
+        var snapped_step = newstep;
         var step_highs = this.step_highs;
-        if (if_snap == true
-            && step_highs != null
-            && step > step_highs[0] - 0.001
-            && step < step_highs[step_highs.length - 1] + 0.001 //without this line, the map will stop zooming out when at the last step
+        if (step_highs != null
+            && newstep > step_highs[0] - 0.001
+            && newstep < step_highs[step_highs.length - 1] + 0.001 //without this line, the map will stop zooming out when at the last step
         ) {
-            //console.log('ssctree.js step_highs:', step_highs)
-            //console.log('ssctree.js step:', step)
+            console.log('ssctree.js step_highs:', step_highs);
+            console.log('ssctree.js step:', newstep);
                 
 
             var current_step_index = snap_to_existing_stephigh(current_step, step_highs);
@@ -3031,7 +3032,7 @@
             //console.log('ssctree.js normal_step_diff:', normal_step_diff)
             //console.log('ssctree.js current_step:', current_step)
             //console.log('ssctree.js step_highs[step_index]:', step_highs[step_index])
-            var snapped_index = snap_to_existing_stephigh(step, step_highs);
+            var snapped_index = snap_to_existing_stephigh(newstep, step_highs);
             snapped_step = step_highs[snapped_index];
 
 
@@ -3062,26 +3063,26 @@
         return snapped_step
     };
 
-    SSCTree.prototype.get_time_factor = function get_time_factor (St, if_snap, zoom_factor, current_step) {
-            if ( if_snap === void 0 ) if_snap = false;
+    SSCTree.prototype.get_time_factor = function get_time_factor (St_new, zoom_factor, current_step) {
             if ( zoom_factor === void 0 ) zoom_factor = 1;
             if ( current_step === void 0 ) current_step = Number.MAX_SAFE_INTEGER;
 
 
-        if (this.tree === null || if_snap == false) {
+        if (this.tree === null) {
             return 1
         }
 
         // reduction in percentage
-        var reductionf = 1 - Math.pow(this.tree.metadata.start_scale_Sb / St, 2);
-        var step = this.tree.metadata.no_of_objects_Nb * reductionf; //step is not necessarily an integer
-        var snapped_step = step;
+        //let reductionf = 1 - Math.pow(this.tree.metadata.start_scale_Sb / St, 2)
+        //let step = this.tree.metadata.no_of_objects_Nb * reductionf //step is not necessarily an integer
+        var newstep = this.get_step_from_St(St_new);
+
+        var snapped_step = newstep;
         var step_highs = this.step_highs;
         var time_factor = 1;
-        if (if_snap == true
-            && step_highs != null
-            && step > step_highs[0] - 0.001
-            && step < step_highs[step_highs.length - 1] + 0.001 //without this line, the map will stop zooming out when at the last step
+        if (step_highs != null
+            && newstep > step_highs[0] - 0.001
+            && newstep < step_highs[step_highs.length - 1] + 0.001 //without this line, the map will stop zooming out when at the last step
         ) {
             //console.log('ssctree.js --------------------------------------')
             //console.log('ssctree.js step_highs:', step_highs)
@@ -3097,9 +3098,9 @@
 
             //console.log('ssctree.js step:', step)
             //console.log('ssctree.js step_highs[current_step_index]:', step_highs[current_step_index])
-            var normal_step_diff = Math.abs(step - current_step);
+            var normal_step_diff = Math.abs(newstep - current_step);
 
-            var snapped_index = snap_to_existing_stephigh(step, step_highs);
+            var snapped_index = snap_to_existing_stephigh(newstep, step_highs);
 
 
             //if we scroll too little, the map doesn't zoom because of the snapping.
@@ -3662,7 +3663,7 @@
         this.ssctree = this.ssctrees[0];
         this.gl = this.getWebGLContext();
         //console.log('map.js container.width, container.height:', this._container.width, this._container.height)
-        this.gl.framebuffer = initFramebufferObject(this.gl, this._container.width, this._container.height);
+        initFramebufferObject(this.gl, this._container.width, this._container.height); //set gl.fbo
         this.renderer = new Renderer(this.gl, this._container, this.ssctrees);
         //this.renderer.setViewport(this.getCanvasContainer().width,
         //                      this.getCanvasContainer().height)
@@ -3690,7 +3691,7 @@
                 var box3ds = [];
                 var box2d = this$1.getTransform().getVisibleWorld();
                 this$1.ssctrees.forEach(function (ssctree) {
-                    var step = ssctree.get_step_from_St(St, this$1.if_snap);
+                    var step = ssctree.get_step_from_St(St);
 
                     //const near_St = this.ssctree.stepMap(this.getTransform().getScaleDenominator())
                     //const near = near_St[0]
@@ -3755,7 +3756,8 @@
         }
         else {
             St = this.getTransform().getScaleDenominator();
-            //console.log('map.js render, test')
+            //console.log('')
+            //console.log('map.js St:', St)
             this.ssctrees.forEach(function (ssctree) {
                 steps.push(ssctree.get_step_from_St(St));
             });
@@ -3952,6 +3954,17 @@
         tr.initTransform(center, [newWidth, newHeight], denominator);
         // update the viewport size of the renderer
         this.renderer.setViewport(newWidth, newHeight);
+        var gl = this.gl;
+
+        var fbo = gl.fbo;
+        gl.bindTexture(gl.TEXTURE_2D, fbo.texture);
+        gl.bindRenderbuffer(gl.RENDERBUFFER, fbo.depthBuffer);        
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, newWidth, newHeight, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, newWidth, newHeight);
+
+        // Unbind the buffer object;
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        gl.bindRenderbuffer(gl.RENDERBUFFER, null);
     };
 
     Map.prototype.subscribe_scale = function subscribe_scale () {
