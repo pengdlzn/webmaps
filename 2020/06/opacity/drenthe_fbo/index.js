@@ -1935,6 +1935,8 @@
             gl.useProgram(shaderProgram);
             gl.bindFramebuffer(gl.FRAMEBUFFER, gl.fbo);
             gl.viewport(0, 0, width, height);
+
+            //var readout = new Uint8Array(4);
             //gl.readPixels(width / 2, height / 2, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, readout);
             //gl.readPixels(0.5, 0.5, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, readout);
             //console.log('drawprograms.js width / 2, height / 2:', width / 2, height / 2)
@@ -3383,8 +3385,7 @@
 
 
 
-    var Evictor = function Evictor(ssctrees, gl)
-    {
+    var Evictor = function Evictor(ssctrees, gl) {
         this.ssctrees = ssctrees;
         this.gl = gl;
     };
@@ -3400,45 +3401,46 @@
     // - is it currently displayed
     // - ... ?
     */
-    Evictor.prototype.evict = function evict (box3ds)
-    {
+    Evictor.prototype.evict = function evict (box3ds) {
         var gl = this.gl;
         var to_evict = [];
         if (this.ssctrees.length == 0) { return; }
 
+        //this.ssctrees.forEach(ssctree => {})
         for (var i = 0; i < this.ssctrees.length; i++) {
             var dataelements = obtain_dataelements(this.ssctrees[i].tree).filter(function (elem) { return elem.loaded });
             //console.log('number of loaded tiles: ' + dataelements.length)
-            dataelements.forEach(
-                function (tile) {
-                    try {
-                        // remove tiles that were rendered more than 3 seconds ago
-                        // and that are currently not on the screen
-                        if (tile.last_touched !== null && (tile.last_touched + 3000) < _now()
-                            && !overlaps3d(box3ds[i], tile.box)) {
-                            to_evict.push(tile);
-                        }
-                    } catch (e) {
-                        console.error(e);
-                        console.log('ssctree.js evict box3ds[i]:', box3ds[i]);
-                        console.log('ssctree.js evict tile.box:', tile.box);
+            dataelements.forEach(function (tile) {
+                try {
+                    // remove tiles that were rendered more than 3 seconds ago
+                    // and that are currently not on the screen
+                    if (tile.last_touched !== null && (tile.last_touched + 3000) < _now()
+                        && !overlaps3d(box3ds[i], tile.box)) {
+                        to_evict.push(tile);
                     }
-
-
-                    //if (box3ds[i] == null) {
-                    //console.log('ssctree.js evict box3ds[i] is null')
-                    //}
-                    //if (tile.box == null) {
-                    //console.log('ssctree.js evict tile.box is null')
-                    //}
+                } catch (e) {
+                    console.error(e);
+                    console.log('ssctree.js evict box3ds[i]:', box3ds[i]);
+                    console.log('ssctree.js evict tile.box:', tile.box);
                 }
-            );
+
+
+                //if (box3ds[i] == null) {
+                //console.log('ssctree.js evict box3ds[i] is null')
+                //}
+                //if (tile.box == null) {
+                //console.log('ssctree.js evict tile.box is null')
+                //}
+            });
             //console.log('number of tiles for which memory will be released: ' + to_evict.length)
             to_evict.forEach(function (tile) {
-                tile.content.destroy(gl);
-                tile.content = null;
+                if (tile.content != null) {
+                    tile.content.destroy(gl);
+                    tile.content = null;
+                }
                 tile.last_touched = null;
                 tile.loaded = false;
+
             });
             // when we have removed tiles, let's clear the screen (both color and depth buffer)
             if (to_evict.length > 0) {
@@ -3697,15 +3699,14 @@
                     //const near = near_St[0]
 
                     box3ds.push([box2d.xmin, box2d.ymin, step, box2d.xmax, box2d.ymax, step]);
-                    this$1.evictor.evict(box3ds);
-                    this$1.render();
-
 
                 });
-
+                this$1.evictor.evict(box3ds);
+                this$1.render();
 
             },
             60 * 1000 * 2.5 // every X mins (expressed in millisec)
+            //10000 // every X mins (expressed in millisec)
         );
 
     };
