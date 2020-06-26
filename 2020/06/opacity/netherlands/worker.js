@@ -42,11 +42,35 @@
 
 
         txt.split('\n').forEach(function (line) {
-            var words = line.split(' ');
             // skip empty line
             if (line.length == 0) {
                  return 
             }
+            //if line = 'l 1 2 3 ', then line.split(' ') will return ['l', '1', '2', '3', '']
+            //in order to remove the empty element, .replace(/\s*$/, '') is used.
+            line = line.replace(/\s*$/, ''); //remove all the spaces at the end.
+            var words = line.split(' ');
+            //if (words[0] == 'l') {
+            //    //console.log('words:', words)
+            //    //console.log('words[words.length - 1]:', words[words.length - 1])
+            //    console.log('words[1].length:', words[1].length)
+            //    console.log('words[words.length - 1].length:', words[words.length - 1].length)
+            //    if (String(words[words.length - 1]) == null ||
+            //        String(words[words.length - 1]) == '' ||
+            //        String(words[words.length - 1]) == "" ||
+            //        String(words[words.length - 1]) == ' ' ||
+            //        String(words[words.length - 1]) == " ") {
+            //        words.pop();
+            //        console.log('words after pop:', words)
+            //    }
+            //    console.log('words:', words)
+
+            //    let s = ''
+            //    let ss = ' '
+            //    console.log('s.length', s.length)
+            //    console.log('ss.length', ss.length)
+            //}
+
             // dispatch based on first character on the line
             switch (words[0])
             {
@@ -84,7 +108,10 @@
                 case '#': {
                     // words[1]: step_high; words[2]: edge_id
                     if (words.length > 1) {
+                        //console.log('')
+                        //console.log('parse.js words[1]:', words[1])
                         step_high = parseFloat(words[1]);
+                        //console.log('parse.js step_high:', step_high)
                     }
                     break
                 }
@@ -99,7 +126,11 @@
 
                     var point_records = [];
                     for (var j = 0; j < polyline.length; j++) {
+                        //console.log('')
+                        //console.log('parse.js polyline.length:', polyline.length)
+                        //console.log('parse.js j:', j)
                         var pt = polyline[j];
+                        //console.log('parse.js pt:', pt)
                         point_records.push([pt[0], pt[1], pt[2], step_high]); //pt[2] is step_low
                     }
 

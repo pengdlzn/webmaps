@@ -2171,12 +2171,14 @@
         for (var i = steps.length - 1; i >= 0; i--) {
             var ssctree = this.ssctrees[i];
 
+            //If both low_scale and high_scale do not exist, the map will be drawn
+            //If low_scale or high_scale exists, we will check if we should draw the map
             var low_scale = ssctree.tree_setting.low_scale;
             var high_scale = ssctree.tree_setting.high_scale;
-            if (low_scale != null && St < low_scale) {
+            if (low_scale != null && low_scale > St) {
                 continue
             }
-            if (high_scale != null && St > high_scale) {
+            if (high_scale != null && high_scale < St) {
                 continue
             }
 
