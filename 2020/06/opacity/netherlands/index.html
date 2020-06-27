@@ -310,15 +310,43 @@
                 'do_blend': true,
                 'opacity': 0.8,
                 'do_draw': true,
+            }            
+
+            let tree_setting2 = { //"metadata": {"start_scale_Sb": 10000, "no_of_objects_Nb": 288726, "no_of_steps_Ns": 288257, "view_scale_Sv": 50000}
+                'layer_nm' : 'Drenthe',
+                'datatype' : 'polygon',
+                'tree_root_file_nm': 'tree.json',
+                'tree_root_href': 'https://varioscale.bk.tudelft.nl/gpudemo/2019/12/drenthe/data/drenthe-quad-larger/',    // with trailing slash!
+                'tile_root_href': 'https://varioscale.bk.tudelft.nl/gpudemo/2019/12/drenthe/data/drenthe-quad-larger/',
+                'draw_cw_faces': true,
+                'do_depth_test': false,                    
+                'do_blend': true, //we must do blending so that the dataset will be transparent
+                'opacity': 0.5,
+                'do_draw': true,
             }
 
-            let tree_setting2 = {
+            let tree_setting3 = {
+                'layer_nm' : 'Aan_20200302_Drenthe',
+                'datatype' : 'polygon',
+                'tree_root_file_nm': 'aan_20200302.json',
+                'tree_root_href': window_location + 'data/',    // with trailing slash!
+                'tile_root_href': window_location + 'data/',
+                'low_scale': null,
+                'high_scale': 300000,
+                'draw_cw_faces': true,
+                'do_depth_test': false,
+                'do_blend': false,
+                'opacity': 0.5,
+                'do_draw': true,
+            }
+
+            let tree_setting4 = {
                 'layer_nm' : 'Aanvoergebieden',
                 'datatype' : 'polygon',
                 'tree_root_file_nm': 'aanvoergebieden2.json',
                 'tree_root_href': window_location + 'data/',    // with trailing slash!
                 'tile_root_href': window_location + 'data/',
-                'low_scale': null,
+                'low_scale': 300000,
                 'high_scale': 1000000,
                 'draw_cw_faces': true,
                 'do_depth_test': false,
@@ -328,7 +356,7 @@
             }
 
 
-            let tree_setting3 = {
+            let tree_setting5 = {
                 'layer_nm' : 'Watershappen2017',
                 'datatype' : 'polygon',
                 'tree_root_file_nm': 'waterschappen2017.json',
@@ -344,20 +372,7 @@
             }
 
 
-            let tree_setting4 = { //"metadata": {"start_scale_Sb": 10000, "no_of_objects_Nb": 288726, "no_of_steps_Ns": 288257, "view_scale_Sv": 50000}
-                'layer_nm' : 'Drenthe',
-                'datatype' : 'polygon',
-                'tree_root_file_nm': 'tree.json',
-                'tree_root_href': 'https://varioscale.bk.tudelft.nl/gpudemo/2019/12/drenthe/data/drenthe-quad-larger/',    // with trailing slash!
-                'tile_root_href': 'https://varioscale.bk.tudelft.nl/gpudemo/2019/12/drenthe/data/drenthe-quad-larger/',
-                'draw_cw_faces': true,
-                'do_depth_test': false,                    
-                'do_blend': true, //we must do blending so that the dataset will be transparent
-                'opacity': 0.5,
-                'do_draw': true,
-            }
-
-            let tree_setting5 = { //"metadata": {"start_scale_Sb": 12000, "no_of_objects_Nb": 1048576, "no_of_steps_Ns": 1048575}
+            let tree_setting6 = { //"metadata": {"start_scale_Sb": 12000, "no_of_objects_Nb": 1048576, "no_of_steps_Ns": 1048575}
                 'layer_nm' : 'NL-raster', 
                 'datatype' : 'image',
                 'tree_root_href': 'https://varioscale.bk.tudelft.nl/gpudemo/2019/11/large-raster-tiles/tree-nl/',
@@ -392,9 +407,10 @@
                     // tree_setting4,                                        
                     // tree_setting1, 
 
-                    tree_setting2, 
-                    tree_setting3,
+                    tree_setting3, 
+                    tree_setting4,
                     tree_setting5,
+                    tree_setting6,
                 ],
                 'interaction_defaults': []
             }
