@@ -7,14 +7,15 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 
-    <link rel="stylesheet" href="w3.css">
+    <link rel="stylesheet" href="https://pengdlzn.github.io/webmaps/decorations/w3.css">
 
     <script type="text/javascript" src="index.js?id=5"></script>
     <link rel="prefetch" href="worker.js">
 
 
-    <link rel="shortcut icon" href="#">
-
+    <!-- the icon for the tab of a web page-->
+    <link href="https://pengdlzn.github.io/webmaps/decorations/gdmc-cube.min.svg" rel="shortcut icon"
+        type="image/vnd.microsoft.icon" />
 
     <style type="text/css">
         #lcanvas {
@@ -208,7 +209,7 @@
         <!--<a href="#" class="w3-bar-item w3-button">Home</a>-->
         <span class="w3-bar-item">
             <a href="http://www.gdmc.nl/">
-                <img class="tu-shadow" src="gdmc-cube.min.svg" height="22">
+                <img class="tu-shadow" src="https://pengdlzn.github.io/webmaps/decorations/gdmc-cube.min.svg" height="22">
             </a>
         </span>
         <!--     <input type="text" class="w3-bar-item w3-input" placeholder="Search.."><a href="#" class="w3-bar-item w3-button tu-blue">Go</a>-->
@@ -226,23 +227,12 @@
         <span class="w3-bar-item" id="scale-denominator">1: scale</span>
 
         <div class="w3-dropdown-click w3-right">
-            <button id="toggleMenu" class="w3-button tu-blue"><img src="vertical.svg" height="20"></button>
+            <button id="toggleMenu" class="w3-button tu-blue">
+                <img src="https://pengdlzn.github.io/webmaps/decorations/vertical.svg" height="20"></button>
 
             <!--style="transform-origin: right top 0px; transform: scale(1); opacity: 1;"-->
             <div id="menu" class="w3-dropdown-content w3-bar-block w3-card w3-right tu-right">
                 <a id="openSettingsButton" class="w3-bar-item w3-button">Settings</a>
-                <!--
-                <a href="#" class="w3-bar-item w3-button">Link 2</a>
-                <a href="#" class="w3-bar-item w3-button">Link 3</a>
-                <a href="#" class="w3-bar-item w3-button">Link 4</a>
-                <a href="#" class="w3-bar-item w3-button">Link 5</a>
-                <a href="#" class="w3-bar-item w3-button">Link 6</a>
-                <a href="#" class="w3-bar-item w3-button">Link 7</a>
-                <a href="#" class="w3-bar-item w3-button">Link 8</a>
-                <a href="#" class="w3-bar-item w3-button">Link 9</a>
-                <a href="#" class="w3-bar-item w3-button">Link 10</a>
-                <a href="#" class="w3-bar-item w3-button">Link 11</a>
-                -->
             </div>
         </div>
 
@@ -359,7 +349,7 @@
             <!--class="w3-bar-item w3-padding-small" -->
 
             <div class="w3-dropdown-click">
-                <button onclick="toggle_legend()" class="w3-button w3-black">Legend</button>
+                <button onclick="toggleLegend()" class="w3-button w3-black">Legend</button>
                 <div id="Demo" class="w3-dropdown-content w3-bar-block w3-border">
                     <!-- see https://tilemill-project.github.io/tilemill/docs/guides/advanced-legends/ -->
                     <div class='my-legend'>
@@ -553,6 +543,7 @@
                 // tree_setting8,
                 // tree_setting4,
                 tree_setting5,
+                // tree_setting6,
             ]
             // let lcenter2d = [186500.0, 312450.0]    //top10nl, center
             let lcenter2d = [257148.828, 533408.562]   //Drenthe
@@ -575,12 +566,18 @@
             lmap_setting.tree_settings.push()
 
             // var rcenter2d = [(lcanvas.width + rcanvas.width)/2 +lcenter2d[0], lcenter2d[1]]
+            let rcommon_tree_settings = []
+            common_tree_settings.forEach(tree_setting => {
+                rcommon_tree_settings.push(Object.assign({}, tree_setting))
+            })
 
 
             var rmap_setting = Object.assign({}, lmap_setting)  //just a shallow copy 
+
             rmap_setting.canvas_nm = rcanvas_nm
             rmap_setting.tree_settings = [
-                ...common_tree_settings,
+                ...rcommon_tree_settings,
+                // tree_setting6,
                 tree_setting2,
             ]
 
@@ -595,6 +592,19 @@
             rmap.loadTree();
 
             createSwiper(innerHeight, lmap, rmap)
+
+            // let msgbus = new varioscale.MessageBusConnector();
+            // msgbus.subscribe('global_msg', (topic, message, sender) => {
+            //     lmap_setting.tree_settings.forEach(tree_setting => {
+            //         console.log('comparer.html left tree_setting:', tree_setting.do_draw)
+            //     })
+
+            //     rmap_setting.tree_settings.forEach(tree_setting => {
+            //         console.log('comparer.html right tree_setting:', tree_setting.do_draw)
+            //     })
+
+            // })
+
 
             function sync_movement(maps) {
                 var _subscription = null;
@@ -622,16 +632,19 @@
             };
             sync_movement([lmap, rmap]);
 
-            let subscribe_scale = (map) => {
-                let msgbus = new varioscale.MessageBusConnector();
-                msgbus.subscribe('map.scale', (topic, message, sender) => {
-                    if (sender !== map.msgbus.id) return;
-                    const scale = (Math.round(message[1] / 5) * 5).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")
-                    let el = document.getElementById("scale-denominator");
-                    el.textContent = " 1:" + scale;
-                });
-            }
-            subscribe_scale(lmap);
+            // let subscribe_scale = (map) => {
+            //     let msgbus = new varioscale.MessageBusConnector();
+            //     msgbus.subscribe('map.scale', (topic, message, sender) => {
+            //         if (sender !== map.msgbus.id) return;
+            //         console.log('comparer.html message[1]:', message[1])
+            //         const scale = (Math.round(message[1] / 5) * 5).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")
+            //         let el = document.getElementById("scale-denominator");
+            //         el.textContent = " 1:" + scale;
+            //     });
+            // }
+            // subscribe_scale(lmap);
+
+            lmap.subscribe_scale()
 
 
 
@@ -821,23 +834,26 @@
             // fixme: handle initial position 
             // (e.g. at center, instead of completely at left)
             let x = e.clientX;
-            if (x < 0) x = 0;
+            if (x < 1) x = 1; //avoid the width of a canvas to be 0; otherwise, tricky to computer scale
 
+            // console.log('comparer.html:', x)
             let hGap = 0;
             let newWidth = window.innerWidth - hGap;
-            if (x > newWidth) x = newWidth;
+            if (x > newWidth - 1) x = newWidth - 1;
 
             return x;
         }
 
 
-        function toggle_layer(cb) { //better to put this function into map.js if we can
+        function toggleLayer(cb) { //better to put this function into map.js if we can
             let msgbus = new varioscale.MessageBusConnector();
             let topic = cb.value;
+
+            //this topic is subscribed in layercontrol.js
             msgbus.publish(topic, cb.checked);
         }
 
-        function toggle_legend() {
+        function toggleLegend() {
             var x = document.getElementById("Demo");
             if (x.className.indexOf("w3-show") == -1) {
                 x.className += " w3-show";
