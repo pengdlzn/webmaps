@@ -3669,7 +3669,6 @@
         });
 
         this.msgbus.subscribe("settings.rendering.boundary-width", function (topic, message, sender) {
-            console.log('map.js parseFloat(message):', parseFloat(message));
             this$1.renderer.settings.boundary_width = parseFloat(message);
             this$1.abortAndRender();
         });
