@@ -331,31 +331,6 @@
         </div>
     </div>
 
-    <!-- <footer class="w3-container w3-display-left">
-        <div class="w3-left">
-            <!--class="w3-bar-item w3-padding-small" -->
-
-            <div class="w3-dropdown-click">
-                <button onclick="toggleLegend()" class="w3-button w3-black">Legend</button>
-                <div id="Demo" class="w3-dropdown-content w3-bar-block w3-border">
-                    <!-- see https://tilemill-project.github.io/tilemill/docs/guides/advanced-legends/ -->
-                    <div class='my-legend'>
-                        <!-- <div class='legend-title'>The Title or Explanation of your Map</div> -->
-                        <div class='legend-scale'>
-                            <ul class='legend-labels'>
-                                <li><span style='background:rgb(255, 255, 178);'></span>Normal</li>
-                                <li><span style='background:rgb(254, 204, 92);'></span>Dry</li>
-                                <li><span style='background:rgb(253, 141, 60);'></span>Very dry</li>
-                                <li><span style='background:rgb(227, 26, 28);'></span>Extremely dry</li>
-                                <li><span style='background:rgb(128, 128, 128);'></span>Unknown</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </footer> -->
-
     <!-- <div class="w3-display-topleft w3-transparent" style="width: 200px; height: 50px; display: none;">
         <ul id="output" style="font-size: 14px; list-style-type: none;"><li>mouse position</li></ul>
     </div> -->
@@ -418,9 +393,9 @@
                 'layer_nm': 'sample',
                 'datatype': 'polygon',
                 'tree_root_file_nm': 'tree.json',
-                // 'step_event_exc_link': window_location + 'data/step_event_exc.json', //activate this entry if we want to snap to certain steps
                 'tree_root_href': window_location + 'data/',    // use the local folder are default value
                 'tile_root_href': window_location + 'data/',    // use the local folder are default value
+                'step_event_exc_link': null, //specify to a json file if we want to snap to certain steps
                 'low_scale': null,
                 'high_scale': null,
                 'draw_cw_faces': true, //draw clockwise (cull back faces) 
@@ -429,46 +404,9 @@
                 'opacity': 0.5,
                 'do_draw': true,
                 'do_color_adapt': false, //the eaten area changes its color to target color
+                'state_compensation': 0.001, //to compensate with the rounding problems
+                'discrete_scales': null, // if we want to have multi-scale representation, then using a list of scale denominators e.g., [10000, 20000, 40000, 80000, 160000, 248117]
             }
-
-            let tree_setting_single = {
-                ...tree_setting_sample,
-                ...{ //the values of the same keys will be updated by this dictionary 
-                    'layer_nm': 'Single-merging',
-                    'tree_root_file_nm': 'tree_smooth.json',
-                    // 'tree_root_href': window_location + 'data/top10nl-single-merging/',    // with trailing slash!
-                    // 'tile_root_href': window_location + 'data/top10nl-single-merging/',
-                    // 'step_event_exc_link': window_location + 'data/top10nl-0.001/step_event_exc.json', //activate this entry if we want to snap to certain steps
-                    // 'tree_root_href': 'https://pengdlzn.github.io/webmaps/2020/08/data/top10nl-single-merging/',    // with trailing slash!
-                    // 'tile_root_href': 'https://pengdlzn.github.io/webmaps/2020/08/data/top10nl-single-merging/',
-                    // 'step_event_exc_link': 'https://pengdlzn.github.io/webmaps/2020/08/data/top10nl-0.1/step_event_exc.json', //activate this entry if we want to snap to certain steps
-                    'draw_cw_faces': false, //draw counterclockwise 
-                    'opacity': 0.8,
-                }
-            }
-
-            
-            // let tree_setting_parallel = {
-            //     ...tree_setting_sample,
-            //     ...{ //the values of the same keys will be updated by this dictionary 
-            //         'layer_nm': 'Parallel-merging',
-            //         'tree_root_file_nm': 'tree_smooth.json',
-            //         // 'tree_root_href': window_location + 'data/top10nl-0.001/',    // with trailing slash!
-            //         // 'tile_root_href': window_location + 'data/top10nl-0.001/',
-            //         // 'step_event_exc_link': window_location + 'data/step_event_exc.json', //activate this entry if we want to snap to certain steps
-            //         'tree_root_href': 'https://pengdlzn.github.io/webmaps/2020/08/data/top10nl-0.01/',    // with trailing slash!
-            //         'tile_root_href': 'https://pengdlzn.github.io/webmaps/2020/08/data/top10nl-0.01/',
-            //         'step_event_exc_link': 'https://pengdlzn.github.io/webmaps/2020/08/data/top10nl-0.01/step_event_exc.json', //activate this entry if we want to snap to certain steps
-            //         'draw_cw_faces': false, //draw counterclockwise (cull front faces)
-            //         'opacity': 0.8,
-            //         'do_color_adapt': true,
-            //     }
-            // }
-
-
-
-
-
 
             let tree_setting_example_7 = {
                 ...tree_setting_sample,
@@ -480,7 +418,8 @@
                     'step_event_exc_link': 'https://pengdlzn.github.io/webmaps/2020/08/data/eg-7-parallel-merging/step_event_exc.json', //activate this entry if we want to snap to certain steps
                     'draw_cw_faces': false, //draw counterclockwise 
                     'opacity': 1,
-                    // 'do_color_adapt': true,
+                    'discrete_scales': [10000, 15275.25232, 26457.51311], // for all states: 10000, 10801.2345, 11832.15957, 13228.75656, 15275.25232, 18708.28693, 26457.51311
+
                 }
             }
 
@@ -508,7 +447,7 @@
                     
 
                     // 'navigationBar_title': 'Top10NL',
-                    'navigationBar_title': 'Drenthe',
+                    'navigationBar_title': 'Example',
 
                 },
                 'canvas_nm': canvas_nm,
