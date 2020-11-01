@@ -24,10 +24,10 @@
             display: none;
             /* padding-top: 100px; */
             position: fixed;
-            left: 60%;
+            left: 55%;
             top: 10%;
             /* width relative to the window */
-            width: 39%;
+            width: 42%;
             height: 80%;
             overflow: auto;
             background-color: rgba(0, 0, 0, 0.4);
@@ -462,6 +462,7 @@
                 'do_blend': true,
                 'opacity': 0.5,
                 'do_draw': true,
+                'use_ofb': false,
                 'do_color_adapt': false, //the eaten area changes its color to target color
                 'state_compensation': 0.001, //to compensate with the rounding problems
                 'discrete_scales': null, // if we want to have multi-scale representation, then using a list of scale denominators e.g., [10000, 20000, 40000, 80000, 160000, 248117]
@@ -529,7 +530,8 @@
             // let center2d = [186500.0, 312250.0]     //example of 7 objects
             var lmap_setting = {
                 'initialization': {
-                    'scale_den': 200000, //top10nl, start_scale
+                    // 'scale_den': 5000000, //top10nl, start_scale
+                    'scale_den': 192000, //top10nl, start_scale
                     // 'scale_den': 10000, // example of 7 objects
                     'center2d': center2d,
                     // 'navigationBar_title': 'Top10NL raster tiles (10 levels)',
