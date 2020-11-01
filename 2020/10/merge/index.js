@@ -2392,14 +2392,35 @@
                 //last_step = this.ssctrees[i].tree.metadata.no_of_steps_Ns
             }
 
+
+
+
             if (step < 0) {
                 //so that the slicing plane will intersect with the SSC, 
                 //this is also related how to decide whether they intersect; see function overlaps3d in ssctree.js
-                step = 0.000001; 
+                step = 0;
+                //step = 0.000001
             }
             else if (step >= last_step) {
-                step = last_step;
+                step = last_step - 0.000001;
             }
+
+            //***********************************************//
+            //A better solution would be like the following
+            //because the displaced surface is below the slicing plane with z-coordinate step.
+            //However, this requires that the top box's height is larger than 0; 
+            //otherwise, no intersection at the top of the ssc; see function overlaps3d in ssctree.js
+            //if (step < 0) {
+            ////so that the slicing plane will intersect with the SSC, 
+            ////this is also related how to decide whether they intersect; see function overlaps3d in ssctree.js
+            ////step = 0.000001
+            //}
+            //else if (step >= last_step) {
+            //step = last_step 
+            //}
+
+
+
             //steps[i] = step
             //console.log('render.js, step after snapping:', step)
 
@@ -3725,11 +3746,24 @@
         // e.g., other: [185210.15625, 311220.96875, 0, 187789.84375, 313678.9375, 0]
 
         var dims = 3;
+        var cmpbox = sscbox;
+        //sscbox[2]: z_min, sscbox[5]: z_max
+        //console.log('sscbox[2], sscbox[5]:', sscbox[2], sscbox[5])
+
+        //console.log('*************slicebox[2], slicebox[5]:', slicebox[2], slicebox[5])
+        //if (sscbox[2] == sscbox[5]) { //this is a special case at the top of the ssc, where the box of level 0 of raster layer has height 0
+
+
+        //    let newbox = [...sscbox] //copy the values
+        //    newbox[5] += 1 //increase z-max
+        //    cmpbox = newbox
+        //}
+
+
         var are_overlapping = true;
         for (var min = 0; min < dims; min++) {
             var max = min + dims;
-            //if zooming out to a very small scale (above the SSC), the map will disappear
-            if ((sscbox[max] < slicebox[min]) || (sscbox[min] >= slicebox[max])) { 
+            if (cmpbox[max] <= slicebox[min] || cmpbox[min] > slicebox[max]) { 
                 are_overlapping = false;
                 break
             }
@@ -3737,6 +3771,7 @@
         //console.log('ssctree.js are_overlapping:', are_overlapping)
         return are_overlapping
     }
+
 
     function center2d(box3d) {
         // 2D center of bottom of box
