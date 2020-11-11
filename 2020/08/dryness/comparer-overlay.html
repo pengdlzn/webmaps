@@ -1,4 +1,4 @@
-﻿﻿<!doctype html>
+﻿<!doctype html>
 <html>
 
 <head>
@@ -339,14 +339,14 @@
                     <fieldset>
                         <legend> zooming duration</legend>
                         <div class="w3-padding">
-                            short (0s) <input type="range" value="1001" step="25" min="0" max="5001" id="zoom-animation"
+                            short (0s) <input type="range" value="2001" step="25" min="0" max="5001" id="zoom-animation"
                                 style="margin: 0 16px 0 16px;"> long (5s)
                         </div>
                     </fieldset>
                     <fieldset>
                         <legend> panning duration</legend>
                         <div class="w3-padding">
-                            short (0s) <input type="range" value="1001" step="500" min="0" max="5001" id="pan-animation"
+                            short (0s) <input type="range" value="2001" step="500" min="0" max="5001" id="pan-animation"
                                 style="margin: 0 16px 0 16px;"> long (5s)
                         </div>
                     </fieldset>
@@ -479,7 +479,7 @@
                 'layer_nm': 'sample',
                 'datatype': 'polygon',
                 'tree_root_file_nm': 'tree.json',
-                // 'step_event_nm': 'eventdiff.json', //activate this entry if we want to snap to certain steps
+                // 'step_event_exc_nm': 'eventdiff.json', //activate this entry if we want to snap to certain steps
                 'tree_root_href': window_location + 'data/',    // use the local folder are default value
                 'tile_root_href': window_location + 'data/',    // use the local folder are default value
                 'low_scale': null,
@@ -489,19 +489,7 @@
                 'do_blend': true,
                 'opacity': 0.5,
                 'do_draw': true,
-            }
-
-            let tree_setting_example_7 = {
-                ...tree_setting_sample,
-                ...{ //the values of the same keys will be updated by this dictionary 
-                    'layer_nm': 'Example-7',
-                    'tree_root_file_nm': 'tree_smooth.json',
-                    // 'step_event_nm': 'eventdiff.json', //activate this entry if we want to snap to certain steps
-                    'tree_root_href': 'https://pengdlzn.github.io/webmaps/2020/05/merge/example-parallel-merging/data/',    // with trailing slash!
-                    'tile_root_href': 'https://pengdlzn.github.io/webmaps/2020/05/merge/example-parallel-merging/data/',
-                    'draw_cw_faces': false, //draw counterclockwise 
-                }
-            }
+            }            
 
             let tree_setting_drenthe_gradual = { //"metadata": {"start_scale_Sb": 10000, "no_of_objects_Nb": 288726, "no_of_steps_Ns": 288257, "view_scale_Sv": 50000}
                 ...tree_setting_sample,
@@ -562,7 +550,6 @@
                 }
             }
 
-
             let common_tree_settings = [
                 tree_setting_aan_20200302_drenthe,
                 // tree_setting_drenthe_gradual,
@@ -580,8 +567,7 @@
             var lmap_setting = {
                 'initialization': {
                     'scale_den': 600000, //top10nl, start_scale
-                    'center2d': center2d,     //top10nl, center
-                    // 'center2d': [150000, 400000],
+                    'center2d': center2d,     
                     // 'navigationBar_title': 'Top10NL raster tiles (10 levels)',
                     // 'navigationBar_title': 'Top10NL',
                     'navigationBar_title': 'Drenthe',
@@ -590,6 +576,7 @@
                 'tree_settings': [
                     ...common_tree_settings,
                     tree_setting_nl_raster,
+                    // tree_setting_single,
                     // tree_setting_example_7_single,
                 ],
                 'interaction_defaults': []
@@ -610,6 +597,7 @@
                 ...rcommon_tree_settings,
                 // tree_setting_nl_raster,
                 tree_setting_drenthe_gradual,
+                // tree_setting_parallel,
                 // tree_setting_example_7,
             ]
 
