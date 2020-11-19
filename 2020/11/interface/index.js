@@ -3845,7 +3845,7 @@
     //        console.log(message);
                 
             this$1._interaction_settings.zoom_factor = parseFloat(message);
-            console.log('map.js zoom_factor:', this$1._interaction_settings.zoom_factor);
+            //console.log('map.js zoom_factor:', this._interaction_settings.zoom_factor)
             this$1.abortAndRender();
         });
 

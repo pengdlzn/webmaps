@@ -272,7 +272,7 @@
 
         <div class="w3-dropdown-click w3-right">
             <button id="toggleSettingsButton" class="w3-button tu-blue">
-                <img src="https://pengdlzn.github.io/webmaps/decorations/vertical.svg" height="20"></button>
+                <img id="settingButton" src="https://pengdlzn.github.io/webmaps/decorations/setting-solid.svg" height="20"></button>
 
             <!--style="transform-origin: right top 0px; transform: scale(1); opacity: 1;"-->
             <!-- <div id="menu" class="w3-dropdown-content w3-bar-block w3-card w3-right tu-right"> -->
@@ -317,7 +317,7 @@
 
     </div>
 
-    <div id="settingsModal" class="my-modal w3-show">
+    <div id="settingsModal" class="my-modal">
         <!-- style="touch-action: none;" -->
         <div class="my-modal-content w3-light-grey" id='modal-content'>
             <!-- <span id="closeSettingsSpan" class="w3-button tu-blue w3-display-topright"><b>&times;</b></span> -->
@@ -526,7 +526,7 @@
                     // we must make a copy so that the left map and the right map will not influence each other
                     // e.g., when we toggle the visibility of a layer of the left map, 
                     // the visubility of the layer of the right map should not be changed
-                    {...tree_setting_multiple},
+                    // {...tree_setting_multiple},
                     {...tree_setting_nl_raster}, 
                     // tree_setting_example_7_single,
                 ],
@@ -546,7 +546,7 @@
             rmap_setting.canvas_nm = rcanvas_nm
             rmap_setting.tree_settings = [
                 ...rcommon_tree_settings,                
-                {...tree_setting_variable},
+                // {...tree_setting_variable},
                 {...tree_setting_nl_raster},
             ]
 
