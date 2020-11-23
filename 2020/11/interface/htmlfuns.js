@@ -4,7 +4,7 @@ function enhanceMenu() {
     function toggleSettingsButton() {
         var x = document.getElementById("settingsModal");
         var btn = document.getElementById("settingButton");
-
+        //console.log('htmlfuns.js x.style.visibility before:', x.style.visibility)
         if (x.style.visibility == 'visible') {
             x.style.visibility = 'hidden'
             btn.src = "https://pengdlzn.github.io/webmaps/decorations/setting-hollow.svg"
@@ -13,7 +13,7 @@ function enhanceMenu() {
             x.style.visibility = 'visible'
             btn.src = "https://pengdlzn.github.io/webmaps/decorations/setting-solid.svg"
         }
-        //console.log('htmlfuns.js x.style.visibility:', x.style.visibility)
+        //console.log('htmlfuns.js x.style.visibility after:', x.style.visibility)
     };
     toggleSettingsButton() //by default, the visibility is 'hidden', so we call the function to make it 'visible'
     document.getElementById("toggleSettingsButton").addEventListener('click', toggleSettingsButton);
@@ -71,17 +71,6 @@ function enhanceMenu() {
     init_slider("boundary-width");
     /* -- end of slider -- */
 
-
-
-    //test to put this function into layercontrol.js
-    function toggleLegend() {
-        var x = document.getElementById("Demo");
-        if (x.className.indexOf("w3-show") == -1) {
-            x.className += " w3-show";
-        } else {
-            x.className = x.className.replace(" w3-show", "");
-        }
-    }
 }
 
 
