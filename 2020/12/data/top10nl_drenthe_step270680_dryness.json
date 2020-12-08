@@ -1,0 +1,20 @@
+{
+  "metadata": {
+    "start_scale_Sb": 10000,
+    "start_scale_Sb_comment": "scale denominator of base map (according to dataset)",
+    "no_of_objects_Nb": 5739,
+    "no_of_objects_Nb_comment": "number of objects on base map (according to dataset)",
+    "no_of_steps_Ns": 5594,
+    "no_of_steps_comment": "number of steps of the SSCTree (according to dataset)"
+  },
+  "id": 0,
+  "box": [200000.0, 510000.0, 0.0, 280000.0, 580000.0, 5595.0],
+  "children": [],
+  "dataelements": [
+    {
+      "id": 1,
+      "box": [200000.0, 510000.0, 0.0, 280000.0, 580000.0, 5595.0],
+      "href": "top10nl_drenthe_step270680_dryness.obj"
+    }
+  ]
+}
