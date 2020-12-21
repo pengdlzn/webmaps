@@ -412,7 +412,7 @@
 
 
     function generate_class_color() {
-        var class_color_dt = {
+        var class_color_raw_dt = {
             // atkis
             '2101': [239, 200, 200],
             '2112': [255, 174, 185],
@@ -597,15 +597,16 @@
             'extremelydry': [237, 248, 233],  //extremely dry
             'drynessunknown': [128, 128, 128],  //dryness unknown
             
-            '0': [35, 139, 69],  //wet, normal
-            '1': [116, 196, 118],  //dry
-            '2': [186, 228, 179],  //very dry
-            '3': [237, 248, 233],  //extremely dry
+            '0': [254, 237, 222],  //wet, normal
+            '1': [253, 190, 133],  //dry
+            '2': [253, 141, 60],  //very dry
+            '3': [217, 71, 1],  //extremely dry
             '-1': [128, 128, 128],  //dryness unknown
         };
 
-        for (var key in class_color_dt) {
-            var rgb = class_color_dt[key];  //rgb is a list of elements r, g, b
+        var class_color_dt = {};
+        for (var key in class_color_raw_dt) {
+            var rgb = class_color_raw_dt[key];  //rgb is a list of elements r, g, b
             var colordt = {};
             colordt.r = rgb[0];
             colordt.g = rgb[1];
