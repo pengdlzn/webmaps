@@ -2455,7 +2455,7 @@
     };
 
     TileContent.prototype.load = function load (url, gl) {
-        if (url.endsWith('obj') == true) {
+        if (url.endsWith('obj') || url.endsWith('obj?raw=true') == true) {
             this.load_ssc_tile(url, gl);
         }
         else if (url.endsWith('json') == true) {
@@ -2482,9 +2482,9 @@
                 // buffer for triangles of polygons
                 // itemSize = 6: x, y, z, r_frac, g_frac, b_frac (see parse.js)
                 //console.log('tilecontent.js data[0]:', data[0])
-                gl.bindFramebuffer(gl.FRAMEBUFFER, gl.fbo);
+                gl.bindFramebuffer(gl.FRAMEBUFFER, gl.fbo); //FIXME: could we remove this line?
                 this$1.polygon_triangleVertexPosBufr = create_data_buffer(gl, new Float32Array(data[0]), 6);
-                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+                gl.bindFramebuffer(gl.FRAMEBUFFER, null);  //FIXME: could we remove this line?
                 //console.log('tilecontent.js load_ssc_tile, this.polygon_triangleVertexPosBufr:', this.polygon_triangleVertexPosBufr)
                 //if (this.polygon_triangleVertexPosBufr == null) {
                 //console.log('tilecontent.js load_ssc_tile, url:', url)
@@ -2514,7 +2514,8 @@
 
                 function create_data_buffer(gl, data_array, itemSize) {
                     var data_buffer = gl.createBuffer();
-                    gl.bindBuffer(gl.ARRAY_BUFFER, data_buffer);
+                    //Unfortunately, the data that is buffered must be with type Float32Array (not Float64Array)
+                    gl.bindBuffer(gl.ARRAY_BUFFER, data_buffer); 
                     gl.bufferData(gl.ARRAY_BUFFER, data_array, gl.STATIC_DRAW);
                     data_buffer.itemSize = itemSize; //x, y, z, r_frac, g_frac, b_frac
                     //console.log('tiles.js data_array.length:', data_array.length)
@@ -2526,13 +2527,10 @@
         );
     };
 
-
-
     TileContent.prototype.load_image_tile = function load_image_tile (href, gl) {
             var this$1 = this;
 
         var f = function () {
-
             // setup texture as placeholder for texture to be retrieved later
             this$1.texture = gl.createTexture();
             gl.bindTexture(gl.TEXTURE_2D, this$1.texture);
@@ -2552,7 +2550,6 @@
             gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
                 width, height, border, srcFormat, srcType,
                 pixel);
-
             this$1.textureCoordBuffer = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, this$1.textureCoordBuffer);
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
@@ -2630,6 +2627,11 @@
     TileContent.prototype._process_image_tile = function _process_image_tile (response, gl) {
             var this$1 = this;
 
+
+        // the json retrieved in response will contain: 
+        // {"box": [216931.52, 573100.48, 223812.8, 579981.76],
+        //  "texture_href": "7/73/80.png",
+        //  "points": [[216931.52, 579981.76, 0], [216931.52, 573100.48, 0], [223812.8, 573100.48, 0], [216931.52, 579981.76, 0], [223812.8, 573100.48, 0], [223812.8, 579981.76, 0]]}   
         var result = [];
 
         response.points.forEach(
@@ -2637,7 +2639,6 @@
         );
         // could also be: response.points.flat(1); ???
         this._upload_image_tile_mesh(gl, new Float32Array(result));
-
         /*
         // using image object to retrieve the texture
         let image = new Image()
@@ -2663,14 +2664,35 @@
             }
         )
         */
+        /*
+            					type: "wmts",
+    					options: {
+    						url: 'https://geodata.nationaalgeoregister.nl/tiles/service/wmts?',
+    						layer: 'brtachtergrondkaart',
+    						style: 'default',
+    						tileMatrixSet: "EPSG:28992",
+    						service: "WMTS",
+    						request: "GetTile",
+    						version: "1.0.0",
+    						format: "image/png"
+    					}
+        */
             
         // using createImageBitmap and fetch to retrieve the texture
-        fetch(this.texture_root_href + response.texture_href, { mode: 'cors' })
+
+        var parts = response.texture_href.split('.'); //  7/73/80.png
+        var address = parts[0].split('/');
+        var z = +address[0];
+        var along_dim = Math.pow(2, z);
+        var row = +address[1];
+        var col = +address[2];
+        var url = "https://geodata.nationaalgeoregister.nl/tiles/service/wmts?&layer=brtachtergrondkaart&style=default&tileMatrixSet=EPSG:28992&service=WMTS&request=GetTile&version=1.0.0&format=image/png";
+        url += "&TileCol="+row+"&TileRow="+(along_dim-col)+"&tileMatrix="+z;
+        fetch(url, { mode: 'cors' })
             .then(function (response) {
                 if (!response.ok) {
                     throw response;
                 }
-
                 return response.blob();
             })
             .then(function (blob) {
